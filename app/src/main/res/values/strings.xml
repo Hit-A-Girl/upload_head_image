@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">CameraApp</string>
+    <string name="base_uploading">开始上传</string>
+</resources>
