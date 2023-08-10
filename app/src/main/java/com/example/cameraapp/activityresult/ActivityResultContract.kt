@@ -3,13 +3,16 @@ package com.example.cameraapp.activityresult
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
+import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.core.content.contentValuesOf
 import com.example.cameraapp.utils.d
@@ -118,8 +121,10 @@ class CropPhotoContract:ActivityResultContract<Uri,CropPhotoContract.CropOutput?
             )
             context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,value)
         }else{
+            //估计是file打头的uri，去看看效果，是的就是file开头
             Uri.fromFile(File(context.externalCacheDir!!.absolutePath,fileName))
         }
+        outputUri.toString().d("Zhen")
         output = CropOutput(outputUri!!,fileName)
         return Intent("com.android.camera.action.CROP")
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -143,3 +148,63 @@ class CropPhotoContract:ActivityResultContract<Uri,CropPhotoContract.CropOutput?
         return null
     }
 }
+/**
+ * 不管了，自定义一个权限请求
+ * 2023-8-9 自定义权限并实现全局权限请求大失败
+ * 2023-8-10 不得不去参考其他的权限请求方法。
+ * 这里就注释掉吧
+ */
+class RequestPermissionContract(private val result:Result):ActivityResultContract<Array<String>,Unit>(){
+    interface Result {
+        fun success()
+        fun failure()
+    }
+    companion object{
+        private const val TAG = "Zhen_RequestPermissions"
+        const val ACTION_REQUEST_PERMISSIONS =
+            "androidx.activity.result.contract.action.REQUEST_PERMISSIONS"
+        const val EXTRA_PERMISSIONS = "androidx.activity.result.contract.extra.PERMISSIONS"
+        const val EXTRA_PERMISSION_GRANT_RESULTS =
+            "androidx.activity.result.contract.extra.PERMISSION_GRANT_RESULTS"
+
+        internal fun createIntent(input: Array<String>): Intent {
+            return Intent(ActivityResultContracts.RequestMultiplePermissions.ACTION_REQUEST_PERMISSIONS).putExtra(
+                ActivityResultContracts.RequestMultiplePermissions.EXTRA_PERMISSIONS, input)
+        }
+    }
+
+    override fun createIntent(context: Context, input: Array<String>): Intent {
+        return Companion.createIntent(input)
+    }
+
+    override fun parseResult(resultCode: Int, intent: Intent?) {
+        if(resultCode==Activity.RESULT_OK&&intent!=null){
+            //获得Intent返回的权限赋予情况
+            val grantResults =
+                intent.getIntArrayExtra(EXTRA_PERMISSION_GRANT_RESULTS)
+            var success = true
+            grantResults?.map {
+                if(it!=PackageManager.PERMISSION_GRANTED){
+                    success = false
+                }
+            }
+            //根据情况执行Result的方法
+            if(success){
+                result.success()
+            }else{
+                result.failure()
+            }
+        }else{
+            result.failure()
+        }
+    }
+
+}
+//lateinit var result:RequestPermissionContract.Result
+//lateinit var activity:ComponentActivity
+//val requestPermissionsLauncher = activity.registerForActivityResult(RequestPermissionContract(result)){}
+//fun testRequestPermissions(activity1: ComponentActivity,array:Array<String>,result1: RequestPermissionContract.Result){
+//    activity = activity1
+//    result = result1
+//    requestPermissionsLauncher.launch(array)
+//}

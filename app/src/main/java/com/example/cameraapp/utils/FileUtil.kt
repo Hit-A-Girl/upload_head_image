@@ -1,17 +1,23 @@
 package com.example.cameraapp.utils
 
 import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.text.TextUtils
+import android.webkit.MimeTypeMap
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.File
+import java.io.FileOutputStream
 import java.io.FileReader
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.lang.Exception
 import java.lang.StringBuilder
 
 /**
@@ -22,6 +28,51 @@ import java.lang.StringBuilder
 class FileUtil {
     //todo 记得评价
     companion object{
+        /**
+         * 文件读写
+         */
+        fun inToOut(`in`:InputStream?,out:OutputStream?):Boolean{
+            if(`in`==null||out==null){
+                return false
+            }
+            try {
+                var read = `in`.read()
+                `in`.use { input->
+                    out.use {
+                        while (read!=-1){
+                            it.write(read)
+                            read = input.read()
+                        }
+                    }
+                }
+            }catch (e:Throwable){
+                e.printStackTrace()
+            }
+            return true
+        }
+
+        /**
+         * uri转file
+         */
+        fun uriToFile(uri:Uri?,context: Context):File?{
+            var file:File?=null
+            if(uri==null) return file
+            if(uri.scheme==ContentResolver.SCHEME_FILE){
+                file = File(uri.path)
+            }else if(uri.scheme==ContentResolver.SCHEME_CONTENT){
+                //把文件复制到沙盒目录
+                val resolver = context.contentResolver
+                val displayName = "${System.currentTimeMillis()}${Math.round((Math.random()+1)*1000)}." +
+                        "${MimeTypeMap.getSingleton().getExtensionFromMimeType(resolver.getType(uri))}"
+                val inputStream = resolver.openInputStream(uri)
+                val cache = File(context.cacheDir.absolutePath,displayName)
+                val outputStream = FileOutputStream(cache)
+                if(inToOut(inputStream,outputStream)){
+                    file = cache
+                }
+            }
+            return file
+        }
         /**
          * 从Uri中获取文件路径，参数为Context,Uri 返回String文件路径
          * 第一版：有很多问题，第二版很快就来
