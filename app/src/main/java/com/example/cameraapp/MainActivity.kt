@@ -12,7 +12,7 @@ import com.example.cameraapp.activityresult.SelectPhotoContract
 import com.example.cameraapp.activityresult.TakePhotoContract
 import com.example.cameraapp.activityresult.permissions
 import com.example.cameraapp.databinding.ActivityMainBinding
-import com.example.cameraapp.utils.FileUtil
+import com.example.cameraapp.utils.uriToFile
 import com.example.shiningapp.util.ToastUtil
 import java.io.File
 
@@ -25,7 +25,8 @@ import java.io.File
  * 第三版使用了自定义的ActivityResult的拍照方法，可以在全版本获取file，唯一的不足是无法从URI中获取文件路径，
  * 只能把URI转换为沙盒文件file，再从file中获取路径，但是总归还是要占据额外的内存空间
  * todo 一直有个思路：就是把这里安卓10的部分嵌入到之前版本中，
- * 现在万事具备只欠东风，把这个代码上传就开始嵌入
+ * 现在万事具备只欠东风，把这个代码上传就开始嵌入，哈哈哈，成了，我把这里URI的安卓10的部分嵌入到第二版，安卓10成了，哈哈哈
+ * 哎，我可能还是不够明白原理啊啊啊啊。
  *
  */
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -86,7 +87,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 //            //好像没啥dio用啊
 //            cropPhotoLauncher.launch(it)
 //        }
-        val image = FileUtil.uriToFile(uri,this@MainActivity)
+        val image = uriToFile(uri,this@MainActivity)
         binding.ivDisplay.setImageBitmap(BitmapFactory.decodeFile(image?.absolutePath))
 
     }
@@ -100,7 +101,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             //好像没啥dio用啊
             cropPhotoLauncher.launch(it)
         }
-        val image = FileUtil.uriToFile(uri,this@MainActivity)
+        val image = uriToFile(uri,this@MainActivity)
         binding.ivDisplay.setImageBitmap(BitmapFactory.decodeFile(image?.absolutePath))
 
 

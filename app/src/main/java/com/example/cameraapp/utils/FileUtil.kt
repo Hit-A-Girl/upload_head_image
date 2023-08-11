@@ -1,24 +1,10 @@
 package com.example.cameraapp.utils
 
-import android.annotation.SuppressLint
-import android.content.ContentResolver
-import android.content.ContentUris
-import android.content.Context
-import android.net.Uri
-import android.provider.DocumentsContract
-import android.provider.MediaStore
 import android.text.TextUtils
-import android.webkit.MimeTypeMap
-import java.io.BufferedReader
-import java.io.BufferedWriter
 import java.io.File
-import java.io.FileOutputStream
-import java.io.FileReader
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.lang.Exception
-import java.lang.StringBuilder
 
 /**
  * @Author Martlet
@@ -47,78 +33,9 @@ class FileUtil {
                 }
             }catch (e:Throwable){
                 e.printStackTrace()
+                return false
             }
             return true
-        }
-
-        /**
-         * uri转file
-         */
-        fun uriToFile(uri:Uri?,context: Context):File?{
-            var file:File?=null
-            if(uri==null) return file
-            if(uri.scheme==ContentResolver.SCHEME_FILE){
-                file = File(uri.path)
-            }else if(uri.scheme==ContentResolver.SCHEME_CONTENT){
-                //把文件复制到沙盒目录
-                val resolver = context.contentResolver
-                val displayName = "${System.currentTimeMillis()}${Math.round((Math.random()+1)*1000)}." +
-                        "${MimeTypeMap.getSingleton().getExtensionFromMimeType(resolver.getType(uri))}"
-                val inputStream = resolver.openInputStream(uri)
-                val cache = File(context.cacheDir.absolutePath,displayName)
-                val outputStream = FileOutputStream(cache)
-                if(inToOut(inputStream,outputStream)){
-                    file = cache
-                }
-            }
-            return file
-        }
-        /**
-         * 从Uri中获取文件路径，参数为Context,Uri 返回String文件路径
-         * 第一版：有很多问题，第二版很快就来
-         */
-        fun getImgPathOnKitKat(context: Context?,uri: Uri?):String{
-            var imgPath = ""
-            if(context==null||uri==null){
-                return imgPath
-            }
-            LogUtil.d("uri=$uri")
-            LogUtil.d("uri.authority=${uri.authority}")
-            if(DocumentsContract.isDocumentUri(context,uri)){
-                val docId = DocumentsContract.getDocumentId(uri)
-                if("com.android.providers.media.documents" == uri.authority){
-                    val id = docId.split(":")[1]
-                    val selection = "${MediaStore.Images.Media._ID}=$id"
-                    imgPath = getImagePath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,selection,context)
-                }else if("com.android.providers.downloads.documents" == uri.authority){
-                    val contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"),docId.toLong())
-                    imgPath = getImagePath(contentUri,null,context)
-                }
-            }else if("content".equals(uri.scheme,true)){
-                imgPath = getImagePath(uri,null,context)
-            }
-            return imgPath
-        }
-
-        @SuppressLint("Range")
-        private fun getImagePath(uri: Uri, selection: String?, context: Context): String {
-            val cursor = context.contentResolver.query(
-                uri,
-                null,
-                selection,
-                null,
-                null,
-                null
-            )
-//            val imgPath = cursor?.takeIf {it.moveToFirst()}?.run {
-//                getString(getColumnIndex(MediaStore.Images.Media.DATA))
-//            }?:""
-            var imgPath:String=""
-            if(cursor?.moveToFirst() == true){
-                imgPath = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA))
-            }
-            cursor?.close()
-            return imgPath
         }
 
         /**

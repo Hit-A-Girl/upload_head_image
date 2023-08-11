@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
-import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
@@ -50,9 +49,51 @@ class SelectPhotoContract:ActivityResultContract<Unit?, Uri?>(){
 }
 
 /**
- * 拍照协定
+ * 拍照协定1.0
  */
 class TakePhotoContract:ActivityResultContract<Unit?,Uri?>(){
+    companion object{
+        private const val TAG = "Zhen_TakePhotoContract"
+    }
+    private var uri:Uri? = null
+    override fun createIntent(context: Context, input: Unit?): Intent {
+        val mimeType = "image/jpeg"
+        val fileName = "IMG_${System.currentTimeMillis()}.jpg"
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        uri = if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.Q){
+            //安卓10及以上获取图片Uri
+            val value = contentValuesOf(
+                Pair(MediaStore.MediaColumns.DISPLAY_NAME,fileName),
+                Pair(MediaStore.MediaColumns.MIME_TYPE,mimeType),
+                Pair(MediaStore.MediaColumns.RELATIVE_PATH,Environment.DIRECTORY_DCIM)
+            )
+            context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,value)
+        }else{
+            //不对不对，好奇怪啊，之前的拍照只是安卓10无效，其他的都没问题，
+            //我不能把这里安卓10以下的改成之前的版本吗？
+            //安卓9及以下获取Uri
+            //不推荐这种写法：安卓10以下获取uri的方式不推荐，还要配置各种文件
+            //推荐shiningApp的arc
+            val file = File(context.externalCacheDir, "/$fileName")
+            intent.putExtra("absolutePath",file.absolutePath)
+            FileProvider.getUriForFile(
+                context,"${context.packageName}.provider",
+                file
+            )
+        }
+        return intent.putExtra(MediaStore.EXTRA_OUTPUT,uri)
+    }
+
+    override fun parseResult(resultCode: Int, intent: Intent?): Uri? {
+        "Take photo,resultCode:$resultCode,uri:$uri".d(TAG)
+        if (resultCode== Activity.RESULT_OK) return uri
+        return null
+    }
+}
+/**
+ * 拍照协定2.0
+ */
+class TakePhotoContract2:ActivityResultContract<Unit?,Uri?>(){
     companion object{
         private const val TAG = "Zhen_TakePhotoContract"
     }

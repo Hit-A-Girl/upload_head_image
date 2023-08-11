@@ -1,12 +1,9 @@
 package com.example.cameraapp.activityresult
 
 import androidx.activity.ComponentActivity
-import androidx.activity.result.ActivityResultCallback
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import java.security.cert.Extension
 
 /**
  * @Author Martlet
@@ -16,6 +13,8 @@ import java.security.cert.Extension
  * java.lang.IllegalStateException: LifecycleOwner com.example.cameraapp.MainActivity@b5fdeae is attempting to
  * register while current state is RESUMED. LifecycleOwners must call register before they are STARTED.
  * 很不幸，但是还是留作纪念吧，成为我曾走过的弯路，加油
+ * 还没完啊，还是要细细比对一下https://zhuanlan.zhihu.com/p/144489782的内容
+ * 有效努力：希望我不是一个裱糊匠，而是真的会了
  */
 /**
  * 多个权限
